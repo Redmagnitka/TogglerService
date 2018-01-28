@@ -1,0 +1,1408 @@
+{
+	"info": {
+		"name": "toggler",
+		"_postman_id": "4fa26eda-74e1-d1e2-4be7-acfef8c9393c",
+		"description": "an API to manage feature toggles",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "tests",
+			"description": "",
+			"item": [
+				{
+					"name": "create a toggle that already exists",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var tid = pm.environment.get(\"toggle_id\");",
+									"pm.test(\"Toogle [\"+tid+\"] not created.\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.response.to.have.status(409);",
+									"    pm.expect(jsonData).to.eql(\"{}\");",
+									"});",
+									"",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.environment.set(\"token\", \"admin_token\");",
+									"pm.environment.set(\"toggle_id\", \"Tc\");",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Length",
+								"value": "1"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://127.0.0.1:5000/api/toggles/{{toggle_id}}",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"toggles",
+								"{{toggle_id}}"
+							]
+						},
+						"description": "# prerequisites\n`DRYRUN= VERBOSE=1 Toggler.Tests/acceptance/web.sh`\n# use case\nAdmin tries to create `Tc` toggle and fails.\n## rational\n`Tc` toggle already exists.\n# output\nShould return `409`.\n# notes\nRunning the script highlighted above on requirements section assures that you will preset 3 toggles `Ta`, `Tb` and `Tc` and also will include `app_alpha` on `Tb` black list and `app_bravo` on `Tc` white list."
+					},
+					"response": []
+				},
+				{
+					"name": "Anonymous tries to create a toggle",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Only admin can create toogles\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.response.to.have.status(401);",
+									"    pm.expect(jsonData).to.eql(\"{}\");",
+									"});"
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.environment.set(\"toggle_id\", new Date());",
+									"",
+									"// swith to non admin",
+									"pm.environment.set(\"token\", \"john doe token\");",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Length",
+								"value": "1"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "http://127.0.0.1:5000/api/toggles/{{toggle_id}}",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"toggles",
+								"{{toggle_id}}"
+							]
+						},
+						"description": "Only admins are allowed to create toggles.\nThe response should be `{}` and status code should be `403`"
+					},
+					"response": []
+				},
+				{
+					"name": "app_alpha accesses Ta",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var tid = pm.environment.get(\"toggle_id\");",
+									"pm.test(\"Toggle [\"+tid+\"] accessed.\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(jsonData.isON).to.eql(false);",
+									"    pm.expect(jsonData.name).to.eql(tid);",
+									"});",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.environment.set(\"toggle_id\", \"Ta\");",
+									"",
+									"// swith user to app_alpha",
+									"pm.environment.set(\"token\", pm.environment.get(\"app_alpha_token\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "FF-ID-Version",
+								"value": "{{app_alpha_version}}"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "http://127.0.0.1:5000/api/toggles/{{toggle_id}}",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"toggles",
+								"{{toggle_id}}"
+							]
+						},
+						"description": "App `app_alpha` tries to get toggle `Ta` and succeeds.\n\nToggle `Ta` has no blacklist nor whitelist hence is usable by all apps.\n\nShould return `200`\n\nNOTE assumes that you have already ran `DRYRUN= VERBOSE=1 Toggler.Tests/acceptance/web.sh`"
+					},
+					"response": []
+				},
+				{
+					"name": "app_alpha accesses Ta with invalid pair id/version",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var tid = pm.environment.get(\"toggle_id\");",
+									"pm.test(\"Toggle [\"+tid+\"] accessed.\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(jsonData.isON).to.eql(false);",
+									"    pm.expect(jsonData.name).to.eql(tid);",
+									"});",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.environment.set(\"toggle_id\", \"Ta\");",
+									"",
+									"// swith user to app_alpha",
+									"pm.environment.set(\"token\", pm.environment.get(\"app_alpha_token\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "FF-ID-Version",
+								"value": "invalid app id",
+								"description": "invalid app version"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "http://127.0.0.1:5000/api/toggles/{{toggle_id}}",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"toggles",
+								"{{toggle_id}}"
+							]
+						},
+						"description": "# usecase\n\nApp `app_alpha` tries to get toggle `Ta` and succeeds.\n\n# input \nApp `app_alpha` sends invalid header `FF-ID-VERSION: invalid_user invalid_token`.\n\n# output\n\nShould return `200`\n\n# Explanation\n\nToggle `Ta` has no blacklist nor whitelist hence is usable by all apps **even** if the app requesting the toggle **misses** to send a valid `FF-ID-Version`\n\n\nNOTE assumes that you have already ran `DRYRUN= VERBOSE=1 Toggler.Tests/acceptance/web.sh`"
+					},
+					"response": []
+				},
+				{
+					"name": "app_alpha cannot access Ta without id/version copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var tid = pm.environment.get(\"toggle_id\");",
+									"pm.test(\"Toggle [\"+tid+\"] cannot be accessed without sending FF-ID-Version header.\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.response.to.have.status(400);",
+									"    pm.expect(jsonData).to.eql(\"{}\");",
+									"});",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.environment.set(\"toggle_id\", \"Ta\");",
+									"",
+									"// swith user to app_alpha",
+									"pm.environment.set(\"token\", pm.environment.get(\"app_alpha_token\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "FF-ID-Version",
+								"value": "{{app_alpha_version}}",
+								"disabled": true
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "http://127.0.0.1:5000/api/toggles/{{toggle_id}}",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"toggles",
+								"{{toggle_id}}"
+							]
+						},
+						"description": "# prerequisites\n`DRYRUN= VERBOSE=1 Toggler.Tests/acceptance/web.sh`\n# use case\nApp `app_alpha` tries to get toggle `Ta` and fails.\n# input\nApp `app_alpha` does not send `FF-ID-VERSION`.\n# output\nShould return `403`\n# notes\nRunning the script highlighted above on requirements section assures that you will preset 3 toggles `Ta`, `Tb` and `Tc` and also will include `app_alpha` on `Tb` black list and `app_bravo` on `Tc` white list."
+					},
+					"response": []
+				},
+				{
+					"name": "app_alpha cannot access Tb",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var tid = pm.environment.get(\"toggle_id\");",
+									"pm.test(\"Toggle [\"+tid+\"] accessed.\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.response.to.have.status(403);",
+									"    pm.expect(jsonData).to.eql(\"{}\");",
+									"});",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.environment.set(\"toggle_id\", \"Tb\");",
+									"",
+									"// swith user to app_alpha",
+									"pm.environment.set(\"token\", pm.environment.get(\"app_alpha_token\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "FF-ID-Version",
+								"value": "{{app_alpha_version}}"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "http://127.0.0.1:5000/api/toggles/{{toggle_id}}",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"toggles",
+								"{{toggle_id}}"
+							]
+						},
+						"description": "App `app_alpha` tries to get toggle `Tb` and fails.\n\nToggle `Tb` has a blacklist and app `app_alpha` is on it.\n\nShould return `403`\n\nNOTE assumes that you have already ran `DRYRUN= VERBOSE=1 Toggler.Tests/acceptance/web.sh`"
+					},
+					"response": []
+				},
+				{
+					"name": "app_alpha cannot access Tc",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var tid = pm.environment.get(\"toggle_id\");",
+									"pm.test(\"Toggle [\"+tid+\"] accessed.\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.response.to.have.status(403);",
+									"    pm.expect(jsonData).to.eql(\"{}\");",
+									"});",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.environment.set(\"toggle_id\", \"Tc\");",
+									"",
+									"// swith user to app_alpha",
+									"pm.environment.set(\"token\", pm.environment.get(\"app_alpha_token\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "FF-ID-Version",
+								"value": "{{app_alpha_version}}"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "http://127.0.0.1:5000/api/toggles/{{toggle_id}}",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"toggles",
+								"{{toggle_id}}"
+							]
+						},
+						"description": "App `app_alpha` tries to get toggle `Tc` and fails.\n\nToggle `Tc` has a whitelist and app `app_alpha` is not on it.\n\nShould return `403`\n\nNOTE assumes that you have already ran `DRYRUN= VERBOSE=1 Toggler.Tests/acceptance/web.sh`"
+					},
+					"response": []
+				},
+				{
+					"name": "app_bravo accesses Ta",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var tid = pm.environment.get(\"toggle_id\");",
+									"pm.test(\"Toggle [\"+tid+\"] accessed.\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(jsonData.isON).to.eql(false);",
+									"    pm.expect(jsonData.name).to.eql(tid);",
+									"});",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.environment.set(\"toggle_id\", \"Ta\");",
+									"",
+									"// swith user to app_alpha",
+									"pm.environment.set(\"token\", pm.environment.get(\"app_bravo_token\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "FF-ID-Version",
+								"value": "{{app_alpha_version}}"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "http://127.0.0.1:5000/api/toggles/{{toggle_id}}",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"toggles",
+								"{{toggle_id}}"
+							]
+						},
+						"description": "App `app_bravo` tries to get toggle `Ta` and succeeds.\n\nToggle `Ta` has no blacklist nor whitelist hence is usable by all apps.\n\nShould return `200`\n\nNOTE assumes that you have already ran `DRYRUN= VERBOSE=1 Toggler.Tests/acceptance/web.sh`"
+					},
+					"response": []
+				},
+				{
+					"name": "app_bravo accesses Tb",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var tid = pm.environment.get(\"toggle_id\");",
+									"pm.test(\"Toggle [\"+tid+\"] accessed.\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(jsonData.isON).to.eql(false);",
+									"    pm.expect(jsonData.name).to.eql(tid);",
+									"});",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.environment.set(\"toggle_id\", \"Tb\");",
+									"",
+									"// swith user to app_alpha",
+									"pm.environment.set(\"token\", pm.environment.get(\"app_bravo_token\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "FF-ID-Version",
+								"value": "{{app_bravo_version}}"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "http://127.0.0.1:5000/api/toggles/{{toggle_id}}",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"toggles",
+								"{{toggle_id}}"
+							]
+						},
+						"description": "App `app_bravo` tries to get toggle `Tb` and succeeds.\n\nDespite the fact that Toggle `Tb` having a blacklist, app `app_bravo` is not on it.\n\nShould return `200`\n\nNOTE assumes that you have already ran `DRYRUN= VERBOSE=1 Toggler.Tests/acceptance/web.sh`"
+					},
+					"response": []
+				},
+				{
+					"name": "app_bravo access Tc",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var tid = pm.environment.get(\"toggle_id\");",
+									"pm.test(\"Toggle [\"+tid+\"] accessed.\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(jsonData.name).to.eql(tid);",
+									"});",
+									"",
+									"",
+									"",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.environment.set(\"toggle_id\", \"Tc\");",
+									"",
+									"// swith user to app_alpha",
+									"pm.environment.set(\"token\", pm.environment.get(\"app_bravo_token\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "FF-ID-Version",
+								"value": "{{app_bravo_version}}"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "http://127.0.0.1:5000/api/toggles/{{toggle_id}}",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"toggles",
+								"{{toggle_id}}"
+							]
+						},
+						"description": "App `app_bravo` tries to get toggle `Tc` and succeeds.\n\nToggle `Tc` has a whitelist and app `app_bravo` is on it.\n\nShould return `200`\n\nNOTE assumes that you have already ran `DRYRUN= VERBOSE=1 Toggler.Tests/acceptance/web.sh`"
+					},
+					"response": []
+				},
+				{
+					"name": "Non admin tries to update Tc to isON",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var tid = pm.environment.get(\"toggle_id\");",
+									"pm.test(\"Toggle [\"+tid+\"] updated.\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.response.to.have.status(403);",
+									"    pm.expect(jsonData).to.eql(\"{}\");",
+									"});",
+									"   "
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.environment.set(\"toggle_id\", \"Tc\");",
+									"",
+									"// swith user to app_alpha",
+									"pm.environment.set(\"token\", pm.environment.get(\"app_bravo_token\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"isON\": true\n}"
+						},
+						"url": {
+							"raw": "http://127.0.0.1:5000/api/toggles/{{toggle_id}}",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"toggles",
+								"{{toggle_id}}"
+							]
+						},
+						"description": "Only admins can update a toggle.\n\nshould return `403`\n\n\nNOTE assumes that you have already ran `DRYRUN= VERBOSE=1 Toggler.Tests/acceptance/web.sh`"
+					},
+					"response": []
+				},
+				{
+					"name": "Admin updates Tc to isON",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var tid = pm.environment.get(\"toggle_id\");",
+									"pm.test(\"Toggle [\"+tid+\"] updated.\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.response.to.have.status(200); // FIXME I would rather go with a 403 to the client",
+									"    pm.expect(jsonData.name).to.eql(\"Tc\");",
+									"    pm.expect(jsonData.isON).to.eql(true);",
+									"});",
+									"   "
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.environment.set(\"toggle_id\", \"Tc\");",
+									"",
+									"// swith user to app_alpha",
+									"pm.environment.set(\"token\", \"admin_token\");"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"isON\": true\n}"
+						},
+						"url": {
+							"raw": "http://127.0.0.1:5000/api/toggles/{{toggle_id}}",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"toggles",
+								"{{toggle_id}}"
+							]
+						},
+						"description": "Only admins can update a toggle.\n\nshould return `403`\n\n\nNOTE assumes that you have already ran `DRYRUN= VERBOSE=1 Toggler.Tests/acceptance/web.sh`"
+					},
+					"response": []
+				},
+				{
+					"name": "app_alpha tries to add app_bravo to toggle Tb black list",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var tid = pm.environment.get(\"toggle_id\");",
+									"pm.test(\"App added to toggle [\"+tid+\"] blacklist.\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.response.to.have.status(403);",
+									"    pm.expect(jsonData).to.eql(\"{}\");",
+									"});",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.environment.set(\"token\", \"app_alpha_token\");",
+									"pm.environment.set(\"toggle_id\", \"Tb\");",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"ID\":\"app_bravo\", \"version\": \"1\"}"
+						},
+						"url": {
+							"raw": "http://127.0.0.1:5000/api/toggles/{{toggle_id}}/bl",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"toggles",
+								"{{toggle_id}}",
+								"bl"
+							]
+						},
+						"description": "# prerequisites\n`DRYRUN= VERBOSE=1 Toggler.Tests/acceptance/web.sh`\n# use case\nApp `app_alpha` tries to add `app_bravo` on `Tb` black list and fails.\n## rational\nOnly admin can add an app on a [black|white] of a toggle.\n# input\nbody should contain a valid App representation, for instance `{\"ID\":\"app_bravo\", \"version\": \"1\"}`\n# output\nShould return `403`. It is in the meanwhile returning `500` which can be confusing for clients.\n# notes\nRunning the script highlighted above on requirements section assures that you will preset 3 toggles `Ta`, `Tb` and `Tc` and also will include `app_alpha` on `Tb` black list and `app_bravo` on `Tc` white list."
+					},
+					"response": []
+				},
+				{
+					"name": "admin tries to add app_bravo to unknown toggle's black must fail",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var tid = pm.environment.get(\"toggle_id\");",
+									"pm.test(\"App added to toggle [\"+tid+\"] blacklist.\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.response.to.have.status(404);",
+									"    pm.expect(jsonData).to.eql(\"{}\");",
+									"});",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.environment.set(\"token\", \"admin_token\");",
+									"pm.environment.set(\"toggle_id\", \"unknown_toggle\");",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"ID\":\"app_bravo\", \"version\": \"1\"}"
+						},
+						"url": {
+							"raw": "http://127.0.0.1:5000/api/toggles/{{toggle_id}}/bl",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"toggles",
+								"{{toggle_id}}",
+								"bl"
+							]
+						},
+						"description": "# prerequisites\n`DRYRUN= VERBOSE=1 Toggler.Tests/acceptance/setup.sh`\n# use case\nAdmin tries to add an app on an unknown toggle's black list and fails.\n## rational\nadmin must create the toggle first.\n# input\nbody should contain a valid App representation, for instance `{\"ID\":\"app_bravo\", \"version\": \"1\"}`\n# output\nIs returning `500` which can be confusing for clients, because the Toggler service is behaving like it is expected.\n# notes"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "api",
+			"description": "all api endpoints",
+			"item": [
+				{
+					"name": "create toggle",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var tid = pm.environment.get(\"toggle_id\");",
+									"pm.test(\"Toogle [\"+tid+\"] created.\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.response.to.have.status(201);",
+									"    pm.expect(jsonData.isON).to.eql(false);",
+									"    pm.expect(jsonData.name).to.eql(tid);",
+									"});",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.environment.set(\"token\", \"admin_token\");",
+									"pm.environment.set(\"toggle_id\", new Date());",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Length",
+								"value": "1"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://127.0.0.1:5000/api/toggles/{{toggle_id}}",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"toggles",
+								"{{toggle_id}}"
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "get toggle",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var tid = pm.environment.get(\"toggle_id\");",
+									"pm.test(\"Toggle [\"+tid+\"] accessed.\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(jsonData.isON).to.eql(false);",
+									"    pm.expect(jsonData.name).to.eql(tid);",
+									"});",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "FF-ID-Version",
+								"value": "{{app_alpha_version}}"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "http://127.0.0.1:5000/api/toggles/{{toggle_id}}",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"toggles",
+								"{{toggle_id}}"
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "update a toggle",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var tid = pm.environment.get(\"toggle_id\");",
+									"pm.test(\"Toggle [\"+tid+\"] updated.\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.name).to.eql(pm.environment.get(\"toggle_id\"));",
+									"    pm.expect(jsonData.isON).to.eql(true);",
+									"});",
+									"   "
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"isON\": true\n}"
+						},
+						"url": {
+							"raw": "http://127.0.0.1:5000/api/toggles/{{toggle_id}}",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"toggles",
+								"{{toggle_id}}"
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "admin add app_bravo to a toggle black list",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"",
+									"// toggle_id was setted for you on pre-request script.",
+									"var tid = pm.environment.get(\"toggle_id\"); ",
+									"pm.test(\"App added to toggle [\"+tid+\"] blacklist.\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(jsonData.isON).to.eql(false);",
+									"    pm.expect(jsonData.name).to.eql(tid);",
+									"});"
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.environment.set(\"token\", pm.environment.get(\"admin_token\"));",
+									"",
+									"pm.sendRequest({",
+									"    url: \"http://127.0.0.1:5000/api/toggles/{{$guid}}\", // PM dynamic var",
+									"    method: \"PUT\",",
+									"    header: {",
+									"        \"Content-Length\": \"1\",",
+									"        \"Authorization\": \"Bearer {{token}}\", // my own env var",
+									"        \"Content-Type\": \"application/json\"",
+									"    },",
+									"    body: {}},",
+									"    function (err, res) {",
+									"        pm.environment.set(\"toggle_id\", res.json().name)",
+									"    }",
+									");"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"ID\":\"app_bravo\", \"version\": \"1\"}"
+						},
+						"url": {
+							"raw": "http://127.0.0.1:5000/api/toggles/{{toggle_id}}/bl",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"toggles",
+								"{{toggle_id}}",
+								"bl"
+							]
+						},
+						"description": "# prerequisites\n- Must be admin.\n- pre-request will create a new token. (you don't need to create a new token)\n# use case\nadmin add `app_bravo` and succeeds.\n## rational\nOnly admin can add an app on a [black|white] of a toggle.\n# input\nbody should contain a valid App representation, for instance `{\"ID\":\"app_bravo\", \"version\": \"1\"}`\n# output\nShould return `200`. \n# notes"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
